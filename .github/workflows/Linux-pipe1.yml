@@ -77,40 +77,32 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      # 2. Build the new report. 
-      # It takes results from your bin folder AND history from the 'gh-pages' folder,
-      # then puts the combined result into 'allure-history'
+      
       - name: Build Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
         with:
-          allure_results: ./bin/Debug/net9.0/allure-results
+          allure_results: bin/Debug/net9.0/allure-results
           allure_history: allure-history
           keep_reports: 20
 
-      # 3. FIX: Remove the nested .git folder to prevent EACCES and Refspec errors
-      - name: Clean Allure History for Deployment
+      - name: Clean Allure History Permissions
         shell: pwsh
         if: always()
         run: |
-          if (Test-Path "allure-history/.git") {
-            Remove-Item -Recurse -Force "allure-history/.git"
-          }
+          if ("${{ runner.os }}" -eq "Linux") { sudo chown -R $env:USER:$env:USER . }
+          if (Test-Path "allure-history/.git") { Remove-Item -Recurse -Force "allure-history/.git" }
 
-
-
-      # 4. Deploy ONLY the 'allure-history' folder.
-      # IMPORTANT: Remove 'force_orphan' so your history persists!
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history # Matches 'allure_history' above
-          # Set this to true ONLY if the branch is empty/missing
-          # This action handles the 'refspec' error internally
-          # commit_message: ${{ github.event.head_commit.message }}
-
-
+          publish_dir: allure-history
+          force_orphan: true  # This ensures the first-time creation of the branch works!          
+          
+          
+          
+     
  
