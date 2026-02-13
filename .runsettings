@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+	<Playwright>
+		<BrowserName>chromium</BrowserName>
+		<LaunchOptions>
+		   <Headless>true</Headless>
+			<Channel>chrome</Channel>
+			<Args>
+				<Arg>--start-maximized</Arg>
+				<Arg>--disable-notifications</Arg>
+			</Args>
+		</LaunchOptions>
+
+		<ContextOptions>
+			<Locale>en-IN</Locale>
+			<TimezoneId>Asia/Kolkata</TimezoneId>
+			<IgnoreHTTPSErrors>true</IgnoreHTTPSErrors>
+			<!--<StorageStatePath>AuthStates/qa_admin.json</StorageStatePath>-->
+		</ContextOptions>
+
+		<!--<Tracing>
+			<Enabled>true</Enabled>
+			<Screenshots>true</Screenshots>
+			<Snapshots>true</Snapshots>
+			<Sources>true</Sources>
+		</Tracing>-->
+
+	</Playwright>
+	<!--RunConfiguration-->
+
+		<!-- Run only Smoke tests in Login area -->
+	<!--TestCaseFilter>
+			FullyQualifiedName~LongLatTest
+		</TestCaseFilter>-->
+
+	<!--ResultsDirectory>TestResults</ResultsDirectory-->
+	<!--/RunConfiguration-->
+</RunSettings>

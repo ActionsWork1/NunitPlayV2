@@ -1,0 +1,119 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # --- Cache NuGet Packages ---
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Install Dependencies
+        run: dotnet restore
+
+      # --- Cache Playwright Browsers ---
+      - name: Get Playwright Version
+        run: echo "PLAYWRIGHT_VERSION=$(dotnet list package | grep Microsoft.Playwright | awk '{print $NF}')" >> $GITHUB_ENV
+
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: dotnet build && pwsh ./bin/Debug/net9.0/playwright.ps1 install chromium --with-deps
+
+      # --- Run Tests ---
+      - name: Run Tests
+        run: xvfb-run --auto-servernum dotnet test --no-restore --settings .runsettings
+        continue-on-error: true
+
+
+       # 1. Pull existing history from gh-pages into a local folder named 'gh-pages'
+      - name: Load Allure History
+        uses: actions/checkout@v4
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      # 2. Build the new report. 
+      # It takes results from your bin folder AND history from the 'gh-pages' folder,
+      # then puts the combined result into 'allure-history'
+      - name: Build Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: ./bin/Debug/net9.0/allure-results
+          allure_history: allure-history
+          keep_reports: 20
+
+      # 3. Deploy ONLY the 'allure-history' folder.
+      # IMPORTANT: Remove 'force_orphan' so your history persists!
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history # Matches 'allure_history' above
+
+
+
+      #~ # --- Allure Report with History ---
+      #~ - name: Load Allure History
+        #~ uses: actions/checkout@v4
+        #~ if: always()
+        #~ continue-on-error: true
+        #~ with:
+          #~ ref: gh-pages
+          #~ path: gh-pages
+
+      #~ - name: Build Allure Report
+        #~ uses: simple-elf/allure-report-action@master
+        #~ if: always()
+        #~ with:
+          #~ allure_results: bin/Debug/net9.0/allure-results
+          #~ allure_history: allure-history
+          #~ keep_reports: 20
+          
+      ##~ - name: Publish Allure report to GitHub Pages
+      #  #~ uses: peaceiris/actions-gh-pages@v4
+      #  #~ with:
+      #    #~ github_token: ${{ secrets.GITHUB_TOKEN }}
+      #    #~ publish_dir: allure-report
+      #    #~ force_orphan: true
+
+      #~ - name: Deploy to GitHub Pages
+        #~ uses: peaceiris/actions-gh-pages@v3
+        #~ if: always()
+        #~ with:
+          #~ github_token: ${{ secrets.GITHUB_TOKEN }}
+          #~ publish_branch: gh-pages
+          #~ publish_dir: allure-history
+          
