@@ -34,7 +34,11 @@ jobs:
 
       # --- Cache Playwright Browsers ---
       - name: Get Playwright Version
-        run: echo "PLAYWRIGHT_VERSION=$(dotnet list package | grep Microsoft.Playwright | awk '{print $NF}')" >> $GITHUB_ENV
+        shell: pwsh
+        run: |
+            $version = (dotnet list package | Select-String "Microsoft.Playwright" | ForEach-Object { $_.ToString().Split(' ')[-1] }).Trim()
+            echo "PLAYWRIGHT_VERSION=$version" >> $env:GITHUB_ENV
+        #run: echo "PLAYWRIGHT_VERSION=$(dotnet list package | grep Microsoft.Playwright | awk '{print $NF}')" >> $GITHUB_ENV
         continue-on-error: true
 
       - name: Cache Playwright Browsers
