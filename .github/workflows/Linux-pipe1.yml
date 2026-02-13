@@ -38,7 +38,7 @@ jobs:
         run: |
             $version = (dotnet list package | Select-String "Microsoft.Playwright" | ForEach-Object { $_.ToString().Split(' ')[-1] }).Trim()
             echo "PLAYWRIGHT_VERSION=$version" >> $env:GITHUB_ENV
-        #run: echo "PLAYWRIGHT_VERSION=$(dotnet list package | grep Microsoft.Playwright | awk '{print $NF}')" >> $GITHUB_ENV
+            echo "PLAYWRIGHT_VERSION=$(dotnet list package | grep Microsoft.Playwright | awk '{print $NF}')" >> $env:GITHUB_ENV
         continue-on-error: true
 
       - name: Cache Playwright Browsers
@@ -90,35 +90,4 @@ jobs:
 
 
 
-      #~ # --- Allure Report with History ---
-      #~ - name: Load Allure History
-        #~ uses: actions/checkout@v4
-        #~ if: always()
-        #~ continue-on-error: true
-        #~ with:
-          #~ ref: gh-pages
-          #~ path: gh-pages
-
-      #~ - name: Build Allure Report
-        #~ uses: simple-elf/allure-report-action@master
-        #~ if: always()
-        #~ with:
-          #~ allure_results: bin/Debug/net9.0/allure-results
-          #~ allure_history: allure-history
-          #~ keep_reports: 20
-          
-      ##~ - name: Publish Allure report to GitHub Pages
-      #  #~ uses: peaceiris/actions-gh-pages@v4
-      #  #~ with:
-      #    #~ github_token: ${{ secrets.GITHUB_TOKEN }}
-      #    #~ publish_dir: allure-report
-      #    #~ force_orphan: true
-
-      #~ - name: Deploy to GitHub Pages
-        #~ uses: peaceiris/actions-gh-pages@v3
-        #~ if: always()
-        #~ with:
-          #~ github_token: ${{ secrets.GITHUB_TOKEN }}
-          #~ publish_branch: gh-pages
-          #~ publish_dir: allure-history
-          
+ 
