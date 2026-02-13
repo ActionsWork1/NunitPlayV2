@@ -36,9 +36,19 @@ jobs:
       - name: Get Playwright Version
         shell: pwsh
         run: |
-            $version = (dotnet list package | Select-String "Microsoft.Playwright" | ForEach-Object { $_.ToString().Split(' ')[-1] }).Trim()
-            echo "PLAYWRIGHT_VERSION=$version" >> $env:GITHUB_ENV
-            echo "PLAYWRIGHT_VERSION=$(dotnet list package | grep Microsoft.Playwright | awk '{print $NF}')" >> $env:GITHUB_ENV
+            #$version = (dotnet list package | Select-String "Microsoft.Playwright" | ForEach-Object { $_.ToString().Split(' ')[-1] }).Trim()
+            #echo "PLAYWRIGHT_VERSION=$version" >> $env:GITHUB_ENV
+            #echo "PLAYWRIGHT_VERSION=$(dotnet list package | grep Microsoft.Playwright | awk '{print $NF}')" >> $env:GITHUB_ENV
+            ## List packages, find the Playwright line, and extract ONLY the version number
+            $packageLine = dotnet list package | Select-String "Microsoft.Playwright" | Select-Object -First 1
+            if ($packageLine -match '(\d+\.\d+\.\d+)') {
+              $v = $matches[1]
+              Write-Host "Found Playwright Version: $v"
+              "PLAYWRIGHT_VERSION=$v" | Out-File -FilePath $env:GITHUB_ENV -Append
+            } else {
+              Write-Error "Could not find Playwright version"
+              exit 1
+            }
         continue-on-error: true
 
       - name: Cache Playwright Browsers
